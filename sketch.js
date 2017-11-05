@@ -10,6 +10,8 @@ const KEY_LEFT = 37,
 	  KEY_SPACE = 32;
 
 let player;
+let score = 0;
+let wave;
 let projectiles = [];
 let particles = [];
 let delta = 0;
@@ -18,9 +20,10 @@ let lastMs = 0;
 function setup()
 {
 	createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
-	frameRate(30);
+	frameRate(60);
 
 	player = new Player(width / 2, height - 32, 32, 32);
+	wave = new Wave().make();
 
 	for (let i = 0; i < 200; i++)
 	{
@@ -28,7 +31,6 @@ function setup()
 	}
 
 	rectMode(CENTER);
-	noFill();
 	stroke(255);
 }
 
@@ -38,6 +40,9 @@ function draw()
 	lastMs = millis();
 
 	background(0);
+	
+		
+	stroke(255);
 
 	for (let i = 0; i < particles.length; i++)
 	{
@@ -45,6 +50,7 @@ function draw()
 	}
 
 	player.update().drawTimer().draw();
+	wave.update().drawHitBoxes();
 
 	for (let i = projectiles.length-1; i >= 0; i--)
 	{
@@ -55,11 +61,15 @@ function draw()
 		{
 			projectiles.splice(i, 1);
 		}
-	}	
-	
+	}
 
-	//text(millis(), 12, 16);
-	//Stext(delta, 12, 28);
+	//score++;
+
+	textAlign(CENTER);
+	textSize(32);
+	stroke(255);
+	
+	text(score, width/2, height-32);
 }
 
 class GameEntity
@@ -67,12 +77,13 @@ class GameEntity
 	constructor(spawnX, spawnY, spawnW, spawnH, spawnDir)
 	{
 		this.pos = createVector(spawnX || 0, spawnY || 0, 0);	
-		this.dim = createVector(spawnW || 8, spawnH || 8, 0);
+		this.dim = createVector(spawnW || 16, spawnH || 16, 0);
 		this.dir = spawnDir || 0;
 	}
 
 	drawHitBox()
 	{
+		noFill();
 		rect(this.pos.x, this.pos.y, this.dim.x, this.dim.y);
 		return this;
 	}
@@ -88,6 +99,14 @@ class GameEntity
 		         this.pos.x > width + this.dim.x/2 ||
 		         this.pos.y < 0 - this.dim.y/2 ||
 		         this.pos.y > height + this.dim.y/2 );
+	}
+
+	collidesWith(other)
+	{
+		return !( this.pos.x + this.dim.x/2 < other.pos.x - other.dim.x/2 ||
+		          this.pos.x - this.dim.x/2 > other.pos.x + other.dim.x/2 ||
+		          this.pos.y + this.dim.y/2 < other.pos.y - other.dim.y/2 ||
+		          this.pos.y - this.dim.y/2 > other.pos.y + other.dim.y/2 );
 	}
 }
 
@@ -108,6 +127,7 @@ class Player extends GameEntity
 	}
 
 	drawTimer() {
+		noFill();
 		rect(this.pos.x, this.pos.y, this.timer/1000*this.dim.x, this.timer/1000*this.dim.y);
 		return this;
 	}
@@ -163,6 +183,7 @@ class Player extends GameEntity
 
 	draw()
 	{
+		noFill();
 		
 		// hull
 		stroke(128, 128, 255);
@@ -196,12 +217,108 @@ class PlayerProjectile extends GameEntity
 	draw()
 	{
 		stroke(255, 0, 0);
+		noFill();
 		rect(this.pos.x, this.pos.y, this.dim.x * 0.75, this.dim.y * 0.75);
 		stroke(255, 128, 0);
-		rect(this.pos.x, this.pos.y + 12, this.dim.x * 0.5, this.dim.y * 0.5);
-		stroke(255, 255, 0);
-		rect(this.pos.x, this.pos.y + 24, this.dim.x * 0.25, this.dim.y * 0.25);
+		rect(this.pos.x + random(-4, 4), this.pos.y + 18, this.dim.x * 0.5, this.dim.y * 0.5);
+		stroke(255, 255, 128);
+		rect(this.pos.x + random(-4, 4), this.pos.y + 32, this.dim.x * 0.25, this.dim.y * 0.25);
 		return this;
+	}
+}
+
+class Enemy extends GameEntity
+{
+	constructor(x, y, w, h, d)
+	{
+		super(x, y, w, h, d);
+		this.speed = 10;
+		this.dead = false;
+		this.worth = 10;
+	}
+
+	update()
+	{
+		this.pos.y += this.speed;
+
+		if (this.pos.y > height)
+		{
+			this.dead = true;
+			
+		}
+
+		for (let i = projectiles.length-1; i >=0; i--)
+		{
+			if (this.collidesWith(projectiles[i]))
+			{
+				score += this.worth;
+				this.dead = true;			
+			}
+		}
+
+		textSize(14);
+		text("Enemy", this.pos.x, this.pos.y - 14);
+		return this;
+	}
+}
+
+class Wave
+{
+	constructor()
+	{
+		this.entities = [];
+		this.interval = 150;
+		this.timer = 1000;	
+	}
+
+	make()
+	{
+		let amount = floor(random(1, 7)), spaces = amount * 2;
+
+		for (let i = 1; i < spaces; i+=2)
+		{
+			this.entities.push(new Enemy(width/spaces*i, -32, 32, 32, 180));
+		}
+
+		return this;
+	}
+
+	update()
+	{
+		if (this.timer > 0)
+		{
+			this.timer -= 1000/this.interval;
+		}
+		else
+		{
+			this.make();
+			this.timer = 1000;
+			this.interval = random(100, 400);
+		}
+		
+		for (let i = this.entities.length-1; i >= 0; i--)
+		{
+			if (this.entities[i].dead)
+				this.entities.splice(i, 1);
+			else
+				this.entities[i].update().pos.add(createVector(0, 4, 0));		
+		}
+		return this;
+	}
+
+	drawHitBoxes()
+	{
+		for (let i = 0; i < this.entities.length; i++)
+		{
+			this.entities[i].drawHitBox();
+		}
+		return this;
+	}
+
+	clean()
+	{
+		this.entities = [];
+		return this();
 	}
 }
 
