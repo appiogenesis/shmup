@@ -31,6 +31,7 @@ function setup()
 		particles.push(new Particle());
 	}
 
+	angleMode(DEGREES);
 	rectMode(CENTER);
 	stroke(255);
 }
@@ -50,8 +51,8 @@ function draw()
 		particles[i].update().draw();
 	}
 
-	player.update().drawTimer().drawHealth().draw();
-	wave.update().drawHitBoxes();
+	player.drawTimer().drawHealth().draw().update();
+	wave.draw().update();
 
 	for (let i = projectiles.length-1; i >= 0; i--)
 	{
@@ -325,9 +326,35 @@ class Enemy extends GameEntity
 				pickups.push(new Pickupable(this.pos.x, this.pos.y));
 			}
 		}
+		return this;
+	}
 
-		textSize(14);
-		text("Enemy", this.pos.x, this.pos.y - 14);
+	draw()
+	{
+		push();
+		translate(this.pos.x, this.pos.y);
+		rotate(this.dir);
+		noFill();
+		
+		// hull
+		stroke(255, 64, 64);
+		rect(0, 0, this.dim.x * 0.35, this.dim.y);
+
+		// wings
+		rect(0, 0, this.dim.x * 0.8, this.dim.y * 0.2);
+		rect(0, this.dim.y * 0.15, this.dim.x * 1.2, this.dim.y * 0.1);
+		
+		// engines
+		stroke(255, 128, 64);
+		rect(-this.dim.x * 0.6, this.dim.y * 0.25, this.dim.x * 0.1, this.dim.y);
+		rect(this.dim.x * 0.6, this.dim.y * 0.25, this.dim.x * 0.1, this.dim.y);
+		
+		// cockpit
+		stroke(255);
+		rect(0, -this.dim.y * 0.35, this.dim.x * 0.2, this.dim.y * 0.2);
+
+		pop();
+
 		return this;
 	}
 }
@@ -372,6 +399,15 @@ class Wave
 				this.entities.splice(i, 1);
 			else
 				this.entities[i].update().pos.add(createVector(0, 4, 0));		
+		}
+		return this;
+	}
+
+	draw()
+	{
+		for (let i = 0; i < this.entities.length; i++)
+		{
+			this.entities[i].draw();
 		}
 		return this;
 	}
