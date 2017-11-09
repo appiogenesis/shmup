@@ -203,15 +203,6 @@ class Player extends GameEntity
 			if (this.collidesWith(pickups[i]))
 			{				
 				this.health += 10;
-				if (this.health > this.maxHealth)
-				{
-					score += this.health - this.maxHealth;
-					this.health = this.maxHealth;
-				}
-				if (this.health < 0)
-				{
-					this.health = 0;
-				}
 				pickups.splice(i, 1);
 			}
 		}
@@ -222,6 +213,16 @@ class Player extends GameEntity
 			{
 				this.health -= 10;
 			}
+		}
+
+		if (this.health > this.maxHealth)
+		{
+			score += this.health - this.maxHealth;
+			this.health = this.maxHealth;
+		}
+		if (this.health < 0)
+		{
+			this.health = 0;
 		}
 
 		return this;
