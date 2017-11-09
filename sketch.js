@@ -13,6 +13,7 @@ let player;
 let score = 0;
 let wave;
 let projectiles = [];
+let pickups = [];
 let particles = [];
 let delta = 0;
 let lastMs = 0;
@@ -49,17 +50,28 @@ function draw()
 		particles[i].update().draw();
 	}
 
-	player.update().drawTimer().draw();
+	player.update().drawTimer().drawHealth().draw();
 	wave.update().drawHitBoxes();
 
 	for (let i = projectiles.length-1; i >= 0; i--)
 	{
 		let projectile = projectiles[i];
-		projectile.update().draw();
+		projectile.draw().update();
 
 		if (projectile.isOutOfBounds())
 		{
 			projectiles.splice(i, 1);
+		}
+	}
+
+	for (let i = pickups.length-1; i >= 0; i--)
+	{
+		let pickup = pickups[i];
+		pickup.draw().update();
+
+		if (pickup.isOutOfBounds())
+		{
+			pickups.splice(i, 1);
 		}
 	}
 
@@ -117,6 +129,7 @@ class Player extends GameEntity
 		super(x, y, w, h, d);
 		this.interval = 12;
 		this.timer = 1000;
+		this.health = this.maxHealth = 100;
 	}
 
 	shoot()
@@ -129,6 +142,13 @@ class Player extends GameEntity
 	drawTimer() {
 		noFill();
 		rect(this.pos.x, this.pos.y, this.timer/1000*this.dim.x, this.timer/1000*this.dim.y);
+		return this;
+	}
+
+	drawHealth() {
+		noFill();
+		stroke(64, 255, 32);
+		rect(width/2, height-8, (width-8)/this.maxHealth*this.health, 4);
 		return this;
 	}
 
@@ -176,6 +196,32 @@ class Player extends GameEntity
 		if (this.pos.x > width + this.dim.x/2)
 		{
 			this.pos.x = -this.dim.x/2;
+		}
+
+		for (let i = pickups.length-1; i >=0; i--)
+		{
+			if (this.collidesWith(pickups[i]))
+			{				
+				this.health += 10;
+				if (this.health > this.maxHealth)
+				{
+					score += this.health - this.maxHealth;
+					this.health = this.maxHealth;
+				}
+				if (this.health < 0)
+				{
+					this.health = 0;
+				}
+				pickups.splice(i, 1);
+			}
+		}
+
+		for (let i = wave.entities.length-1; i >=0; i--)
+		{
+			if (this.collidesWith(wave.entities[i]))
+			{
+				this.health -= 10;
+			}
 		}
 
 		return this;
@@ -227,6 +273,28 @@ class PlayerProjectile extends GameEntity
 	}
 }
 
+class Pickupable extends GameEntity
+{
+	constructor(x, y, w, h, d)
+	{
+		super(x, y, w, h, d);
+	}
+
+	draw()
+	{
+		stroke(0, 255, 0);
+		rect(this.pos.x, this.pos.y, this.dim.x, this.dim.y);
+		rect(this.pos.x, this.pos.y, this.dim.x * 0.6, this.dim.y * 0.2);
+		rect(this.pos.x, this.pos.y, this.dim.x * 0.2, this.dim.y * 0.6);
+		return this;
+	}
+
+	update()
+	{
+		this.pos.y += 4;
+	}
+}
+
 class Enemy extends GameEntity
 {
 	constructor(x, y, w, h, d)
@@ -252,7 +320,8 @@ class Enemy extends GameEntity
 			if (this.collidesWith(projectiles[i]))
 			{
 				score += this.worth;
-				this.dead = true;			
+				this.dead = true;
+				pickups.push(new Pickupable(this.pos.x, this.pos.y));
 			}
 		}
 
