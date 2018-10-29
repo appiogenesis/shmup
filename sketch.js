@@ -2,7 +2,7 @@
 
 const CANVAS_WIDTH = 600,
 	  CANVAS_HEIGHT = 800;
-	  
+
 const KEY_LEFT = 37,
       KEY_RIGHT = 39,
 	  KEY_UP = 38,
@@ -42,8 +42,8 @@ function draw()
 	lastMs = millis();
 
 	background(0);
-	
-		
+
+
 	stroke(255);
 
 	for (let i = 0; i < particles.length; i++)
@@ -81,7 +81,7 @@ function draw()
 	textAlign(CENTER);
 	textSize(32);
 	stroke(255);
-	
+
 	text(score, width/2, height-32);
 }
 
@@ -89,7 +89,7 @@ class GameEntity
 {
 	constructor(spawnX, spawnY, spawnW, spawnH, spawnDir)
 	{
-		this.pos = createVector(spawnX || 0, spawnY || 0, 0);	
+		this.pos = createVector(spawnX || 0, spawnY || 0, 0);
 		this.dim = createVector(spawnW || 16, spawnH || 16, 0);
 		this.dir = spawnDir || 0;
 	}
@@ -108,7 +108,7 @@ class GameEntity
 
 	isOutOfBounds()
 	{
-		return ( this.pos.x < 0 - this.dim.x/2 || 
+		return ( this.pos.x < 0 - this.dim.x/2 ||
 		         this.pos.x > width + this.dim.x/2 ||
 		         this.pos.y < 0 - this.dim.y/2 ||
 		         this.pos.y > height + this.dim.y/2 );
@@ -188,7 +188,7 @@ class Player extends GameEntity
 		{
 			this.pos.y += 12;
 		}
-		
+
 		if (this.pos.x < -this.dim.x/2)
 		{
 			this.pos.x = width + this.dim.x/2;
@@ -202,7 +202,7 @@ class Player extends GameEntity
 		for (let i = pickups.length-1; i >=0; i--)
 		{
 			if (this.collidesWith(pickups[i]))
-			{				
+			{
 				this.health += 10;
 				pickups.splice(i, 1);
 			}
@@ -232,7 +232,7 @@ class Player extends GameEntity
 	draw()
 	{
 		noFill();
-		
+
 		// hull
 		stroke(128, 128, 255);
 		rect(this.pos.x, this.pos.y, this.dim.x * 0.35, this.dim.y);
@@ -240,12 +240,12 @@ class Player extends GameEntity
 		// wings
 		rect(this.pos.x, this.pos.y, this.dim.x * 0.8, this.dim.y * 0.2);
 		rect(this.pos.x, this.pos.y + this.dim.y * 0.15, this.dim.x * 1.2, this.dim.y * 0.1);
-		
+
 		// engines
 		stroke(255, 128, 64);
 		rect(this.pos.x - this.dim.x * 0.6, this.pos.y + this.dim.y * 0.25, this.dim.x * 0.1, this.dim.y);
 		rect(this.pos.x + this.dim.x * 0.6, this.pos.y + this.dim.y * 0.25, this.dim.x * 0.1, this.dim.y);
-		
+
 		// cockpit
 		stroke(255);
 		rect(this.pos.x, this.pos.y - this.dim.y * 0.35, this.dim.x * 0.2, this.dim.y * 0.2);
@@ -303,6 +303,7 @@ class Enemy extends GameEntity
 	{
 		super(x, y, w, h, d);
 		this.speed = 10;
+		this.startX = x;
 		this.dead = false;
 		this.worth = 10;
 	}
@@ -310,11 +311,12 @@ class Enemy extends GameEntity
 	update()
 	{
 		this.pos.y += this.speed;
+		this.pos.x = this.startX + Math.sin(millis() / 100) * width / 12;
 
 		if (this.pos.y > height)
 		{
 			this.dead = true;
-			
+			score -= this.worth / 2;
 		}
 
 		for (let i = projectiles.length-1; i >=0; i--)
@@ -335,7 +337,7 @@ class Enemy extends GameEntity
 		translate(this.pos.x, this.pos.y);
 		rotate(this.dir);
 		noFill();
-		
+
 		// hull
 		stroke(255, 64, 64);
 		rect(0, 0, this.dim.x * 0.35, this.dim.y);
@@ -343,12 +345,12 @@ class Enemy extends GameEntity
 		// wings
 		rect(0, 0, this.dim.x * 0.8, this.dim.y * 0.2);
 		rect(0, this.dim.y * 0.15, this.dim.x * 1.2, this.dim.y * 0.1);
-		
+
 		// engines
 		stroke(255, 128, 64);
 		rect(-this.dim.x * 0.6, this.dim.y * 0.25, this.dim.x * 0.1, this.dim.y);
 		rect(this.dim.x * 0.6, this.dim.y * 0.25, this.dim.x * 0.1, this.dim.y);
-		
+
 		// cockpit
 		stroke(255);
 		rect(0, -this.dim.y * 0.35, this.dim.x * 0.2, this.dim.y * 0.2);
@@ -365,7 +367,7 @@ class Wave
 	{
 		this.entities = [];
 		this.interval = 150;
-		this.timer = 1000;	
+		this.timer = 1000;
 	}
 
 	make()
@@ -392,13 +394,13 @@ class Wave
 			this.timer = 1000;
 			this.interval = random(100, 400);
 		}
-		
+
 		for (let i = this.entities.length-1; i >= 0; i--)
 		{
 			if (this.entities[i].dead)
 				this.entities.splice(i, 1);
 			else
-				this.entities[i].update().pos.add(createVector(0, 4, 0));		
+				this.entities[i].update().pos.add(createVector(0, 4, 0));
 		}
 		return this;
 	}
