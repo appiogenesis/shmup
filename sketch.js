@@ -303,6 +303,7 @@ class Enemy extends GameEntity
 	{
 		super(x, y, w, h, d);
 		this.speed = 10;
+		this.startX = x;
 		this.dead = false;
 		this.worth = 10;
 	}
@@ -310,11 +311,12 @@ class Enemy extends GameEntity
 	update()
 	{
 		this.pos.y += this.speed;
+		this.pos.x = this.startX + Math.sin(millis() / 100) * width / 12;
 
 		if (this.pos.y > height)
 		{
 			this.dead = true;
-
+			score -= this.worth / 2;
 		}
 
 		for (let i = projectiles.length-1; i >=0; i--)
