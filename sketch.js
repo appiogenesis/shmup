@@ -9,6 +9,7 @@ const KEY_LEFT = 37,
 	  KEY_DOWN = 40,
 	  KEY_SPACE = 32;
 
+let gameOver = false;
 let player;
 let score = 0;
 let wave;
@@ -43,46 +44,56 @@ function draw()
 
 	background(0);
 
+	if (!gameOver) {
+		stroke(255);
 
-	stroke(255);
-
-	for (let i = 0; i < particles.length; i++)
-	{
-		particles[i].update().draw();
-	}
-
-	player.drawTimer().drawHealth().draw().update();
-	wave.draw().update();
-
-	for (let i = projectiles.length-1; i >= 0; i--)
-	{
-		let projectile = projectiles[i];
-		projectile.draw().update();
-
-		if (projectile.isOutOfBounds())
+		for (let i = 0; i < particles.length; i++)
 		{
-			projectiles.splice(i, 1);
+			particles[i].update().draw();
 		}
-	}
 
-	for (let i = pickups.length-1; i >= 0; i--)
-	{
-		let pickup = pickups[i];
-		pickup.draw().update();
+		player.drawTimer().drawHealth().draw().update();
+		wave.draw().update();
 
-		if (pickup.isOutOfBounds())
+		for (let i = projectiles.length-1; i >= 0; i--)
 		{
-			pickups.splice(i, 1);
+			let projectile = projectiles[i];
+			projectile.draw().update();
+
+			if (projectile.isOutOfBounds())
+			{
+				projectiles.splice(i, 1);
+			}
 		}
+
+		for (let i = pickups.length-1; i >= 0; i--)
+		{
+			let pickup = pickups[i];
+			pickup.draw().update();
+
+			if (pickup.isOutOfBounds())
+			{
+				pickups.splice(i, 1);
+			}
+		}
+
+		//score++;
+
+		textAlign(CENTER);
+		textSize(32);
+		stroke(255);
+
+		text(score, width/2, height-32);
+	} else {
+		textAlign(CENTER);
+		stroke(255);
+
+		textSize(64);
+		text("GAME OVER", width/2, height/2);
+		textSize(48);
+		text(score, width/2, height/2 + 64);
+		noLoop();
 	}
-
-	//score++;
-
-	textAlign(CENTER);
-	textSize(32);
-	stroke(255);
-
-	text(score, width/2, height-32);
 }
 
 class GameEntity
@@ -224,6 +235,7 @@ class Player extends GameEntity
 		if (this.health < 0)
 		{
 			this.health = 0;
+			gameOver = true;
 		}
 
 		return this;
