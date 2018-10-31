@@ -162,6 +162,7 @@ class Player extends GameEntity
 	{
 		super(x, y, w, h, d);
 		this.interval = 12;
+		this.shield = 3000;
 		this.timer = 1000;
 		this.health = this.maxHealth = 100;
 	}
@@ -202,6 +203,13 @@ class Player extends GameEntity
 			this.timer = 0;
 		}
 
+		if (this.shield > 0)
+		{
+			this.shield -= 3;
+		} else {
+			this.shield = 0;
+		}
+
 		if (keyIsDown(KEY_LEFT))
 		{
 			this.pos.x -= 12;
@@ -236,7 +244,7 @@ class Player extends GameEntity
 		{
 			if (this.collidesWith(pickups[i]))
 			{
-				this.health += 10;
+				pickups[i].onPickup(this)
 				pickups.splice(i, 1);
 			}
 		}
@@ -245,7 +253,12 @@ class Player extends GameEntity
 		{
 			if (this.collidesWith(wave.entities[i]))
 			{
-				this.health -= 10;
+				if (this.shield > 0) {
+					this.health -= 5;
+					this.shield -= 100;
+				} else {
+					this.health -= 10;
+				}
 			}
 		}
 
@@ -284,6 +297,17 @@ class Player extends GameEntity
 		stroke(255);
 		rect(this.pos.x, this.pos.y - this.dim.y * 0.35, this.dim.x * 0.2, this.dim.y * 0.2);
 
+		// shield
+		if (this.shield > 0)
+		{
+			stroke(0, 128, 255);
+			ellipse(this.pos.x, this.pos.y, this.dim.x * 1.5, this.dim.y * 1.5)
+			if (this.shield > 500)
+			{
+				ellipse(this.pos.x, this.pos.y, this.dim.x * 2, this.dim.y * 2)
+			}
+		}
+
 		return this;
 	}
 }
@@ -318,7 +342,6 @@ class Pickupable extends GameEntity
 
 	draw()
 	{
-		stroke(0, 255, 0);
 		rect(this.pos.x, this.pos.y, this.dim.x, this.dim.y);
 		rect(this.pos.x, this.pos.y, this.dim.x * 0.6, this.dim.y * 0.2);
 		rect(this.pos.x, this.pos.y, this.dim.x * 0.2, this.dim.y * 0.6);
@@ -328,6 +351,63 @@ class Pickupable extends GameEntity
 	update()
 	{
 		this.pos.y += 4;
+		return this;
+	}
+
+	onPickup(player) {
+		score += 5;
+	}
+}
+
+class HealthPickup extends Pickupable
+{
+	constructor(x, y, w, h, d)
+	{
+		super(x, y, w, h, d);
+	}
+
+	draw()
+	{
+		stroke(0, 255, 0);
+		super.draw();
+		return this;
+	}
+
+	update()
+	{
+		super.update();
+		return this;
+	}
+
+	onPickup(player) {
+		player.health += 10;
+		return this;
+	}
+}
+
+class ShieldPickup extends Pickupable
+{
+	constructor(x, y, w, h, d)
+	{
+		super(x, y, w, h, d);
+	}
+
+	draw()
+	{
+		stroke(0, 128, 255);
+		super.draw();
+		return this;
+	}
+
+	update()
+	{
+		super.update();
+		return this;
+	}
+
+	onPickup(player) {
+		player.shield += 1000;
+		return this;
 	}
 }
 
@@ -359,7 +439,14 @@ class Enemy extends GameEntity
 			{
 				score += this.worth;
 				this.dead = true;
-				pickups.push(new Pickupable(this.pos.x, this.pos.y));
+				if (Math.random() < 0.5)
+				{
+					pickups.push(new HealthPickup(this.pos.x, this.pos.y));
+				}
+				else
+				{
+					pickups.push(new ShieldPickup(this.pos.x, this.pos.y));
+				}
 			}
 		}
 		return this;
