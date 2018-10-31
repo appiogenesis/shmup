@@ -474,8 +474,12 @@ class Particle
 
 	update()
 	{
-		this.y += 12;
 		this.x %= width;
+
+		let absP = Math.abs(this.x - width/2) / width;
+
+		this.y += 24 - Math.cos(absP) * 12;
+
 		if (this.y > height)
 		{
 			this.x = random(width);
