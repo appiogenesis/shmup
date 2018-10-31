@@ -7,7 +7,8 @@ const KEY_LEFT = 37,
       KEY_RIGHT = 39,
 	  KEY_UP = 38,
 	  KEY_DOWN = 40,
-	  KEY_SPACE = 32;
+	  KEY_SPACE = 32,
+	  KEY_ENTER = 13;
 
 let gameOver = false;
 let player;
@@ -24,17 +25,36 @@ function setup()
 	createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
 	frameRate(60);
 
+	reset();
+
+	angleMode(DEGREES);
+	rectMode(CENTER);
+	stroke(255);
+}
+
+function reset()
+{
+	console.log("Resetting...");
 	player = new Player(width / 2, height - 32, 32, 32);
 	wave = new Wave().make();
+	projectiles = [];
 
+	particles = [];
 	for (let i = 0; i < 200; i++)
 	{
 		particles.push(new Particle());
 	}
 
-	angleMode(DEGREES);
-	rectMode(CENTER);
-	stroke(255);
+	score = 0;
+	gameOver = false;
+	lastMs = millis();
+	loop();
+}
+
+function keyPressed() {
+	if (keyCode === KEY_ENTER && gameOver === true) {
+		reset();
+	}
 }
 
 function draw()
@@ -92,6 +112,8 @@ function draw()
 		text("GAME OVER", width/2, height/2);
 		textSize(48);
 		text(score, width/2, height/2 + 64);
+		textSize(32);
+		text("PRESS ENTER", width/2, height - 32)
 		noLoop();
 	}
 }
